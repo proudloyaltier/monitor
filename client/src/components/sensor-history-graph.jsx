@@ -1,29 +1,47 @@
 import React from 'react'
 import * as ReactGoogleCharts from 'react-google-charts'
+import * as firebase from 'firebase'
+
+firebase.initializeApp({
+  apiKey: 'AIzaSyB87R_NkLPy2lUQFHb_3japiTDrlJkvp7c',
+  authDomain: 'forcloud-monitor-db.firebaseapp.com',
+  databaseURL: 'https://forcloud-monitor-db.firebaseio.com',
+  projectId: 'forcloud-monitor-db',
+  storageBucket: '',
+  messagingSenderId: '538640326535',
+  appId: '1:538640326535:web:b62493e6dd63f11b48bd22'
+})
+
+const database = firebase.database()
 
 class SensorHistoryGraph extends React.Component {
-  state = {}
+  state = { headers: ['Time'], rows: [] }
 
   render () {
+    const { headers, rows } = this.state
+
     return (
-      <ReactGoogleCharts.Chart chartType="Line" data={this.state.data}></ReactGoogleCharts.Chart>
+      <ReactGoogleCharts.Chart chartType="Line" data={[headers].concat(rows)}></ReactGoogleCharts.Chart>
     )
   }
 
   componentDidMount () {
-    fetch('/api/sensors/history').then(response => response.json()).then(data => {
-      const { error } = data
+    const { headers } = this.state
 
-      if (error) throw new Error(error)
+    database.ref('sensors/history').on('child_added', child => {
+      const row = [new Date(Number.parseInt(child.key))]
 
-      this.setState({
-        data: [
-          ['Time', 'Temperature', 'pH', 'Salinity'],
-          [new Date(1569951085000), 6, 7.4, 6.1],
-          [new Date(1569959200000), 5, 7.6, 6.7],
-          [new Date(1572566400000), 4, 8.1, 6.3]
-        ]
+      child.val().sensors.forEach(sensor => {
+        const { name } = sensor
+
+        if (!headers.includes(name)) {
+          headers.push(name)
+        }
+
+        row.push(sensor.value)
       })
+
+      this.setState({ headers, rows: this.state.rows.concat([row]) })
     })
   }
 }

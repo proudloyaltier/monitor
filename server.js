@@ -1,5 +1,10 @@
+'use strict'
+
 const express = require('express')
 const mongoDB = require('mongoDB')
+
+const databaseURL = 'mongodb://localhost:27017'
+const database = mongoDB.MongoClient(databaseURL)
 
 const app = express()
 
@@ -20,10 +25,6 @@ app.get('/api/sensors/history', (request, response) => {
             {
               name: 'pH',
               value: 7
-            },
-            {
-              name: 'Salinity',
-              value: 5
             }
           ]
         }
